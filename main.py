@@ -5,6 +5,7 @@ from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.data.requests import StockBarsRequest
 from alpaca.data.timeframe import TimeFrame
 from datetime import datetime, timedelta
+import uvicorn
 
 load_dotenv()
 
@@ -15,12 +16,10 @@ client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
 app = FastAPI()
 
-# Corrected get_candles function with TimeFrame usage
 def get_candles(timeframe):
     end = datetime.utcnow()
     start = end - timedelta(days=30)
     
-    # Request data for the given timeframe
     request = StockBarsRequest(
         symbol_or_symbols="SPY",
         timeframe=timeframe,
@@ -28,7 +27,6 @@ def get_candles(timeframe):
         end=end
     )
     
-    # Fetch the stock bars and reset the index
     bars = client.get_stock_bars(request).df
     bars.reset_index(inplace=True)
     
@@ -37,11 +35,14 @@ def get_candles(timeframe):
 @app.get("/spy/multi-resolution-ohlc")
 def get_multi_resolution_ohlc():
     candles = {
-        "5_min": get_candles(TimeFrame.Minute),  # 5-minute candles
-        "15_min": get_candles(TimeFrame.Minute),  # 15-minute candles
-        "30_min": get_candles(TimeFrame.Minute),  # 30-minute candles
-        "1_hour": get_candles(TimeFrame.Hour)     # 1-hour candles
+        "5_min": get_candles(TimeFrame.Minute),
+        "15_min": get_candles(TimeFrame.Minute),
+        "30_min": get_candles(TimeFrame.Minute),
+        "1_hour": get_candles(TimeFrame.Hour)
     }
     return {"symbol": "SPY", "candles": candles}
 
-
+# Bind the app to the correct port
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Use the $PORT environment variable or default to 8000
+    uvicorn.run(app, host="0.0.0.0", port=port)

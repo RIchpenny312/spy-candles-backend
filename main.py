@@ -8,13 +8,14 @@ from datetime import datetime, timedelta
 
 load_dotenv()
 
-API_KEY = os.getenv("AKI6HOG3BKCHHAKLAJUY")
-API_SECRET = os.getenv("t2drfGDtSnB2KH3OyYdBU01QmITWn4YXLMi3ihzs")
+API_KEY = os.getenv("APCA_API_KEY_ID")
+API_SECRET = os.getenv("APCA_API_SECRET_KEY")
 
 client = StockHistoricalDataClient(API_KEY, API_SECRET)
 
 app = FastAPI()
 
+# ✅ Function to get candles for a timeframe
 def get_candles(timeframe):
     end = datetime.utcnow()
     start = end - timedelta(days=30)
@@ -31,6 +32,7 @@ def get_candles(timeframe):
     
     return bars.to_dict(orient="records")
 
+# ✅ API endpoint to return multiple timeframes
 @app.get("/spy/multi-resolution-ohlc")
 def get_multi_resolution_ohlc():
     candles = {
@@ -40,3 +42,4 @@ def get_multi_resolution_ohlc():
         "1_hour": get_candles(TimeFrame.Hour)
     }
     return {"symbol": "SPY", "candles": candles}
+
